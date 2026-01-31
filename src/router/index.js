@@ -1,67 +1,82 @@
+// src/router/index.js
+
 import { createRouter, createWebHistory } from 'vue-router'
 import AdminLayout from '../layouts/AdminLayout.vue'
-import { useUserStore } from '../stores/user' // 假设有用户状态管理
-import { authService } from '../services/auth' // 导入认证服务
+import { useUserStore } from '../stores/user'
+import { authService } from '../services/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      redirect: '/dashboard', // 默认重定向到仪表盘
+      redirect: '/dashboard',
       component: AdminLayout,
-      meta: { requiresAuth: true }, // 需要认证
+      meta: { requiresAuth: true, title: '首页' }, // 添加 title 便于面包屑显示
       children: [
         {
           path: 'dashboard',
           name: 'dashboard',
-          component: () => import('../views/DashboardView.vue')
+          component: () => import('../views/DashboardView.vue'),
+          meta: { title: '仪表盘' }
         },
         {
           path: 'devices',
           name: 'devices',
-          component: () => import('../views/DevicesView.vue')
+          component: () => import('../views/DevicesView.vue'),
+          meta: { title: '设备管理' }
         },
         {
           path: 'users',
           name: 'users',
-          component: () => import('../views/UsersView.vue')
+          component: () => import('../views/UsersView.vue'),
+          meta: { title: '用户管理' }
         },
         {
           path: 'bindings',
           name: 'bindings',
-          component: () => import('../views/BindingsView.vue')
+          component: () => import('../views/BindingsView.vue'),
+          meta: { title: '绑定管理' }
+        },
+        {
+          path: 'rules',
+          name: 'rules',
+          component: () => import('../views/RulesView.vue'), // 假设您会创建此视图
+          meta: { title: '规则管理' }
         }
       ]
     },
     {
-      path: '/login', // 登录页面（用户将被重定向到Keycloak）
+      path: '/login',
       name: 'login',
-      component: { template: '<div>Redirecting to Keycloak...</div>' } // 仅作占位
+      component: { template: '<div>Redirecting to Keycloak...</div>' },
+      meta: { title: '登录' }
     },
     {
-      path: '/callback', // Keycloak 回调路由
+      path: '/callback',
       name: 'callback',
       component: { template: '<div>Processing login...</div>' },
+      meta: { title: '认证回调' },
       beforeEnter: async (to, from, next) => {
         try {
-          // 处理 Keycloak 回调，交换 token
           await authService.handleKeycloakCallback()
           const userStore = useUserStore()
-          // 获取用户信息并存储
           const userProfile = await authService.getUserProfile()
           userStore.setUser(userProfile)
-          next('/') // 登录成功，重定向到主页
+          next('/')
         } catch (error) {
           console.error('Keycloak callback failed:', error)
-          next('/login') // 失败重定向到登录页
+          // 提示错误信息
+          alert('登录失败，请重试。' + error.message);
+          next('/login')
         }
       }
     },
     {
-      path: '/:pathMatch(.*)*', // 404 页面
+      path: '/:pathMatch(.*)*',
       name: 'NotFound',
-      component: { template: '<el-result icon="error" title="404 Not Found" sub-title="很抱歉，您访问的页面不存在"></el-result>' }
+      component: { template: '<el-result icon="error" title="404 Not Found" sub-title="很抱歉，您访问的页面不存在"></el-result>' },
+      meta: { title: '页面未找到' }
     }
   ]
 })
@@ -70,18 +85,36 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
+  // --- 开发模式跳过认证 ---
+  if (import.meta.env.VITE_SKIP_AUTH === 'true' && to.meta.requiresAuth) {
+    if (!userStore.isAuthenticated) {
+      // 在开发模式下，如果未认证，则模拟一个用户状态
+      userStore.setUser({
+        preferred_username: 'dev_user',
+        email: 'dev@hubx.com',
+        sub: 'dev_user_id_123',
+        roles: ['admin', 'operator'] // 模拟赋予一些角色
+      });
+      userStore.setTokens('dummy_access_token', 'dummy_refresh_token');
+    }
+    console.warn('开发模式：跳过认证，直接进入页面。')
+    return next()
+  }
+  // --- 开发模式跳过认证 结束 ---
+
+
   if (to.meta.requiresAuth) {
     if (!userStore.isAuthenticated) {
-      // 检查本地是否有 Token，尝试静默刷新或重新登录
       const token = authService.getAccessToken()
       if (token) {
-        // 如果有 token，尝试获取用户信息并验证
         try {
+          // 尝试获取用户信息，如果 token 有效则会更新用户状态
           const userProfile = await authService.getUserProfile()
-          userStore.setUser(userProfile)
+          userStore.setUser(userProfile) // 确保用户状态被更新
           next()
         } catch (error) {
           // Token 可能过期或无效，重定向到 Keycloak 登录
+          console.error('Token is invalid or expired, redirecting to login:', error)
           authService.redirectToKeycloakLogin()
         }
       } else {
