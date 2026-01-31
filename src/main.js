@@ -8,7 +8,7 @@ import ElementPlus from 'element-plus' // 导入 Element Plus
 import 'element-plus/dist/index.css' // 导入 Element Plus 样式
 import * as ElementPlusIconsVue from '@element-plus/icons-vue' // 导入 Element Plus 图标
 
-import './assets/base.css' // 导入基础 CSS (Vue CLI 默认生成)
+import '@/assets/base.css'
 
 const app = createApp(App)
 
