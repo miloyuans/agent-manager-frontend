@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      Favicon 是网站的小图标，通常放在 public 目录下。
+      如果您的 public 目录下有 favicon.ico，浏览器会自动找到并显示。
+    -->
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Manager 后台</title>
+  </head>
+  <body>
+    <!--
+      这是 Vue 应用的挂载点。
+      您的整个 Vue 应用将在这个 id 为 'app' 的 div 内部渲染。
+    -->
+    <div id="app"></div>
+
+    <!--
+      这是 Vite 的入口脚本。
+      它使用 'type="module"' 来支持 ES 模块。
+      Vite 会自动处理这个脚本，并注入必要的代码，如 HMR (热模块替换) 客户端。
+      务必将此 script 标签放在 body 结束标签之前，以确保 DOM 元素都已加载。
+    -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
