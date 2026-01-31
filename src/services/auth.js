@@ -4,9 +4,9 @@ import { useUserStore } from '../stores/user'
 
 // --- Keycloak 配置 ---
 const KEYCLOAK_CONFIG = {
-  realm: 'your-keycloak-realm', // 替换为你的 Realm
-  clientId: 'your-admin-frontend-client-id', // 替换为你的管理后台前端 Client ID
-  authServerUrl: 'https://your-keycloak-domain/auth', // 替换为你的 Keycloak URL
+  realm: 'vpbet', // 替换为你的 Realm
+  clientId: 'Shengshi6688', // 替换为你的管理后台前端 Client ID
+  authServerUrl: 'https://auth.optlink.top', // 替换为你的 Keycloak URL
   redirectUri: window.location.origin + '/callback', // 必须与 Keycloak Client 配置一致
 }
 
